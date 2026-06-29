@@ -1,0 +1,27 @@
+{
+  "name": "backend",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/express": "^5.0.6",
+    "@types/pg": "^8.20.0",
+    "drizzle-kit": "^1.0.0-rc.4",
+    "tsx": "^4.22.4"
+  },
+  "scripts": {
+    "start": "bun --watch run src/index.ts"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@clerk/backend": "^3.8.4",
+    "@clerk/express": "^2.1.32",
+    "dotenv": "^17.4.2",
+    "drizzle-orm": "^1.0.0-rc.4",
+    "express": "^5.2.1",
+    "pg": "^8.22.0"
+  }
+}
