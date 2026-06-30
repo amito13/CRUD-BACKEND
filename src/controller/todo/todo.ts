@@ -94,29 +94,26 @@ export class TodoController {
   }
   async deleteTodo(req: Request, res: Response) {
     try {
-      const { userId } = getAuth(req);
-      if (!userId) {
-        return res.status(401).json({
-          message: "Unauthorized",
-        });
-      }
-      const { todoId } = req.params;
-      if (!todoId) {
+
+      const { id } = req.params;
+     
+      if (!id) {
         return res.status(400).json({
           message: "Todo ID is required",
         });
       }
+      console.log("debug");
       const [todo] = await db
         .select()
         .from(todos)
-        .where(eq(todos.id, String(todoId)));
+        .where(eq(todos.id, String(id)));
       if (!todo) {
         return res.status(404).json({
           message: "Todo not found",
         });
       }
       
-      await db.delete(todos).where(eq(todos.id, String(todoId)));
+      await db.delete(todos).where(eq(todos.id, String(id)));
       return res.status(200).json({
         message: "Todo deleted successfully",
       });
@@ -129,14 +126,14 @@ export class TodoController {
   }
   async updateTodo(req: Request, res: Response) {
     try {
-      const { userId } = getAuth(req);
-      if (!userId) {
-        return res.status(401).json({
-          message: "Unauthorized",
-        });
-      }
-      const { todoId } = req.params;
-      if (!todoId) {
+      // const { userId } = getAuth(req);
+      // if (!userId) {
+      //   return res.status(401).json({
+      //     message: "Unauthorized",
+      //   });
+      // }
+      const { id } = req.params;
+      if (!id) {
         return res.status(400).json({
           message: "Todo ID is required",
         });
@@ -145,7 +142,7 @@ export class TodoController {
       const [todo] = await db
         .select()
         .from(todos)
-        .where(eq(todos.id, String(todoId)));
+        .where(eq(todos.id, String(id)));
       if (!todo) {
         return res.status(404).json({
           message: "Todo not found",
@@ -157,7 +154,7 @@ export class TodoController {
           title: title ?? todo.title,
           description: description ?? todo.description,
         })
-        .where(eq(todos.id, String(todoId)))
+        .where(eq(todos.id, String(id)))
         .returning();
       return res.status(200).json({
         message: "Todo updated successfully",
