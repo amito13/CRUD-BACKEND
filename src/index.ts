@@ -18,9 +18,9 @@ app.use('/todos', todoRouter);
 app.get('/health', (req: Request, res: Response) => {
     return res.status(200).json({ status: 'ok' });
 })
-
-app.listen(3000,"0.0.0.0", () => {
-    console.log('Server is running on port http://localhost:3000');
+const PORT = Number(process.env.PORT || 8000);
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server is running on port ${PORT}`);
 }); 
 
  
