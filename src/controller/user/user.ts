@@ -4,17 +4,15 @@ import { users } from "../../db/schema";
 import { eq } from "drizzle-orm";
 import { getAuth, clerkClient } from "@clerk/express";
 
+
 export class UserController {
   async setUser(req: Request, res: Response) {
     try {
-      const auth = getAuth(req);
-
-      console.log("AUTH =>", auth);
       const { userId } = getAuth(req);
-      
 
       if (!userId) {
         return res.status(401).json({
+          success: false,
           message: "Unauthorized",
         });
       }
@@ -22,27 +20,53 @@ export class UserController {
       const clerkUser = await clerkClient.users.getUser(userId);
 
       const clerkId = clerkUser.id;
+      const email = clerkUser.emailAddresses[0]?.emailAddress ?? null;
+      const name = clerkUser.firstName ?? "";
+      const imageUrl = clerkUser.imageUrl ?? null;
 
-      const email = clerkUser.emailAddresses[0]?.emailAddress;
-
-      const name =
-        `${clerkUser.firstName ?? ""}`
-
-      const imageUrl = clerkUser.imageUrl;
-
-      const existingUser = await db
+      // 1. Already linked with Clerk
+      const existingByClerkId = await db
         .select()
         .from(users)
         .where(eq(users.clerkId, clerkId));
 
-      if (existingUser.length > 0) {
+      if (existingByClerkId.length > 0) {
         return res.status(200).json({
+          success: true,
           message: "User already exists",
-          user: existingUser[0],
+          user: existingByClerkId[0],
         });
       }
 
-      const [user] = await db
+      // 2. User exists with same email
+      if (email) {
+        const existingByEmail = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, email));
+
+        if (existingByEmail.length > 0) {
+          const [updatedUser] = await db
+            .update(users)
+            .set({
+              clerkId,
+              name,
+              imageUrl,
+              updatedAt: new Date(),
+            })
+            .where(eq(users.email, email))
+            .returning();
+
+          return res.status(200).json({
+            success: true,
+            message: "Existing user linked with Clerk",
+            user: updatedUser,
+          });
+        }
+      }
+
+      // 3. Brand new user
+      const [newUser] = await db
         .insert(users)
         .values({
           clerkId,
@@ -53,13 +77,15 @@ export class UserController {
         .returning();
 
       return res.status(201).json({
+        success: true,
         message: "User created successfully",
-        user,
+        user: newUser,
       });
     } catch (error) {
       console.error(error);
 
       return res.status(500).json({
+        success: false,
         message: "Internal Server Error",
       });
     }
